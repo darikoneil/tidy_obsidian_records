@@ -1,0 +1,71 @@
+{
+    "mouse-information":{
+        "key": "mouse-information",
+        "documents": [
+            "Registration (PDF)"
+        ],
+        "images": null,
+        "notebooks": [
+            "Registration (Notebook)"
+        ],
+        "tables": [
+            "mouse-information"
+            ]
+    },
+    "head-fixation": {
+        "key": "head-fixation",
+        "documents": [
+            "Surgical Sheet"
+        ],
+        "images": null,
+        "notebooks": null,
+        "tables": [
+            "head-fixation"
+        ]
+    },
+    "cranial-window": {
+        "key": "cranial-window",
+        "documents": [
+            "Surgical Sheet",
+            "Robot File"
+        ],
+        "images": [
+            "Axial View",
+            "Coronal View"
+        ],
+        "notebooks": null,
+        "tables": [
+            "cranial-window"
+        ]
+    },
+    "tamoxifen-injection":{
+        "key": "tamoxifen-injection",
+        "documents": null,
+        "images": null,
+        "notebooks": null,
+        "tables": [
+            "tamoxifen-injection",
+            "tamoxifen-injection",
+            "tamoxifen-injection"
+        ]
+    },
+    "imaging": {
+        "key": "imaging",
+        "documents": [
+            "imaging (PDF)"
+        ],
+        "images": [
+            "Imaging Projections",
+            "Landmark Projections"
+        ],
+        "notebooks": [
+            "imaging (Notebook)"
+        ],
+        "tables": [
+            "imaging-session",
+            "imaging-fov",
+            "imaging-fov",
+            "imaging-roadmap"
+        ]
+    }
+}

@@ -1,0 +1,19 @@
+<table style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th colspan="2" style="text-align: center; font-size: 1.5em; padding: 10px; background-color: #f000; color: #fff; border: 1px solid #ddd;"> {{ records.pop("title") }} </th>
+        </tr>
+		<tr>
+			<th style="text-align: center; font-size: 1.25em; padding: 10px; border: 1px solid #ddd;"><strong>Parameter</strong></th>
+			<th style="text-align: center; font-size: 1.25em; padding: 10px; border: 1px solid #ddd;"><strong>Value</strong></th>
+		</tr>
+    </thead>
+    <tbody>
+    {% for parameter in records %}
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ parameter.capitalize() }}</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;"><input type="text" value="{{ records[parameter] }}" style="width: 100%;border: none;"/></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
