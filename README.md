@@ -1,2 +1,2 @@
 # tidy_obsidian_records
-Generates tidy records for adding to laboratory notebook in obsidian
+Generates tidy records that are rendered prettily in obsidian
