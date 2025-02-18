@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator, ConfigD
 from pydantic_core import PydanticUndefined
 
 from sub_code.imaging.meta import load_metadata
-from sub_code.records.files import select_file
+from records.files import select_file
 
 if TYPE_CHECKING:
-    from sub_code.records.templates import RecordsTemplate
+    from records.templates import RecordsTemplate
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
