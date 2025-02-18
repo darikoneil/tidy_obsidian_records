@@ -14,6 +14,7 @@ _INITIAL_DIRECTORY: Path = Path.cwd()
 #: Placeholders Type Alias
 Placeholders: TypeAlias = list[str | None]
 
+
 def select_file(**kwargs) -> Path | list[Path] | None:
     """
     Interactive tool for file/files selection. All keyword arguments are
