@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Any, KeysView, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from pydantic_core import PydanticUndefined
 
-from records.prairieview import load_metadata
+from sub_code.prairview import load_metadata
 from records.misc import select_file
 
 if TYPE_CHECKING:
-    from records.templates import RecordsTemplate
+    from sub_code.records.templates import RecordsTemplate
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
