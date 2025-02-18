@@ -7,8 +7,8 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from records.misc import Placeholders
+
+from records.misc import Placeholders
 
 
 """
