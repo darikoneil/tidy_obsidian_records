@@ -101,6 +101,17 @@ class RecordsTemplateRegistry:
     def register(cls, template_: "RecordsTemplate") -> None:
         if cls.has(template_.key):
             raise ValueError(f"Template with key {template_.key} already exists")
+        try:
+            assert cls.__path.exists()
+        except AssertionError:
+            cls.__path.mkdir(parents=True)
+
+        markdown_file = cls.__path.parents[1].joinpath(f"{template_.key}.md")
+        if not markdown_file.exists():
+            raise FileNotFoundError(
+                f"Markdown file for template {template_.key} does not exist"
+            )
+
         cls.__registry[template_.key] = template_
         cls.__new_template = True
 
@@ -113,6 +124,31 @@ class RecordsTemplateRegistry:
     def __exit__(cls, exc_type, exc_val, exc_tb):  # noqa: ANN206, ANN001
         if cls.__new_template:
             cls._save()
+
+
+def add_template(key: str,
+                 documents: list[str] | None = None,
+                 files: list[str] | None = None,
+                 images: list[str] | None = None,
+                 tables: list[str] | None = None,
+                 ) -> None:
+    """
+
+    :param key:
+    :param documents:
+    :param files:
+    :param images:
+    :param tables:
+    :return:
+    """
+
+    with RecordsTemplateRegistry() as registry:
+        template = RecordsTemplate(key=key,
+                                   documents=documents,
+                                   images=images,
+                                   notebooks=files,
+                                   tables=tables)
+        registry.register(template)
 
 
 """
