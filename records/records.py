@@ -23,7 +23,7 @@ def generate_records(
     """
     Generate records for a subject using a template from the template directory. The
     generated records will be saved in the exports directory within a folder named after
-    the subject. Any relevant documents, images, and notebooks will be collected and
+    the subject. Any relevant documents, images, and files will be collected and
     copied to a sub-folder named 'files' within the subject folder.
 
     :param key:
@@ -35,7 +35,7 @@ def generate_records(
     with RecordsTemplateRegistry() as registry:
         records_template = registry.get(key)
 
-    documents, images, notebooks = collect_files(
+    documents, images, files = collect_files(
         subject, records_template, exports_directory
     )
     tables = collect_tables(records_template)
@@ -45,7 +45,7 @@ def generate_records(
         key,
         documents,
         images,
-        notebooks,
+        files,
         tables,
     )
     records_filename = exports_directory.joinpath(f"{subject}", f"{subject}_{key}.md")
@@ -62,7 +62,7 @@ def generate_records(
 
 def arg_parser() -> dict[str, Any]:
     """
-    Parse command line arguments. temporary
+    Parse command line arguments
 
     :returns: The key of the template, the name of the subject, and the path to save the
         generated records
@@ -96,5 +96,4 @@ def arg_parser() -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    # temporary
     generate_records(**arg_parser())
