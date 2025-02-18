@@ -24,8 +24,8 @@ class RecordsTemplate(BaseModel):
     documents: list[str] | None
     #: Images included in the template
     images: list[str] | None
-    #: Notebooks included in the template
-    notebooks: list[str] | None
+    #: Files included in the template
+    files: list[str] | None
     #: Tables included in the template
     tables: list[str] | None
 
@@ -146,7 +146,7 @@ def add_template(key: str,
         template = RecordsTemplate(key=key,
                                    documents=documents,
                                    images=images,
-                                   notebooks=files,
+                                   files=files,
                                    tables=tables)
         registry.register(template)
 
@@ -191,7 +191,7 @@ def render(
     key: str,
     documents: list[Path | None],
     images: list[Path | None],
-    notebooks: list[str | None],
+    files: list[str | None],
     tables: list[dict | None],
 ) -> str:
     environment = Environment(
@@ -204,6 +204,6 @@ def render(
     return template.render(
         documents=[render_links(document) for document in documents],
         images=[render_links(image) for image in images],
-        notebooks=[render_links(notebook) for notebook in notebooks],
+        files=[render_links(file) for file in files],
         tables=[render_table_(records=table) for table in tables],
     )
