@@ -6,7 +6,7 @@ from pathlib import Path
 from tkinter import ttk
 from typing import TYPE_CHECKING, Any, KeysView, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from pydantic_core import PydanticUndefined
 
 from sub_code.imaging.meta import load_metadata
@@ -20,6 +20,30 @@ if TYPE_CHECKING:
 // Records Table Registry
 ////////////////////////////////////////////////////////////////////////////////////////
 """
+
+def _gen_field_alias(field_name: str) -> str:
+    """
+    Convert a snake_case field name to a plain English alias
+
+    :param field_name: The snake_case field name
+    :return: The plain English alias
+    """
+    parts = field_name.split("_")
+    return " ".join([part.capitalize() for part in parts])
+
+
+class Table(BaseModel):
+    """
+    Base class for all records tables
+    """
+
+    title: str
+    model_config = ConfigDict(alias_generator=_gen_field_alias,
+                              populate_by_name=True)
+
+
+    def __str__(self):
+        return self.title
 
 
 class TableRegistry:
@@ -49,7 +73,7 @@ class TableRegistry:
         return register_table
 
     @classmethod
-    def get(cls, key: str) -> BaseModel:
+    def get(cls, key: str) -> Table:
         """
         Retrieve a table by its name or alias
 
@@ -68,12 +92,13 @@ class TableRegistry:
         return cls.__registry.keys()
 
 
-def collect_tables(records_template: "RecordsTemplate") -> list[BaseModel | None]:
+def collect_tables(records_template: "RecordsTemplate") -> list[Table | None]:
     """
-    Collect all records tables from the table registry
+    Collect all table implementations used in the records template from the
+    table registry
 
     :param records_template: The records template
-    :return: A list of records tables
+    :return: A list of records tables (or an empty list)
     """
     return [TableRegistry.get(table) for table in records_template.tables or []]
 
@@ -86,15 +111,16 @@ def collect_tables(records_template: "RecordsTemplate") -> list[BaseModel | None
 
 
 @TableRegistry.register(alias="mouse-information")
-class MouseInformation(BaseModel):
+class MouseInformation(Table):
     title: str = Field("Mouse Information", frozen=True)
     subject: str = "E000"
     cage: str = "000000"
-    dob: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    dob: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"),
+                     alias="DOB")
     gender: Literal["Male", "Female"] = "Female"
-    headplate_id: str = "Plain"
+    headplate_id: str = Field(default="Plain", alias="Headplate ID")
     condition: str = "N/A"
-    physical_id: str = "N/A"
+    physical_id: str = Field(default="N/A", alias="Physical ID")
     genotype: str = "Wildtype"
     transnetyx: str = "N/A"
 
@@ -113,7 +139,7 @@ class MouseInformation(BaseModel):
 
 
 @TableRegistry.register(alias="head-fixation")
-class HeadFixation(BaseModel):
+class HeadFixation(Table):
     title: str = Field("Head-Fixation", frozen=True)
     subject: str = "E000"
     procedure_date: str = Field(
@@ -122,13 +148,13 @@ class HeadFixation(BaseModel):
     procedure_time: str = Field(
         default_factory=lambda: datetime.now().strftime("%H:%M")
     )
-    headplate_id: str = "N/A"
+    headplate_id: str = Field(default="Plain", alias="Headplate ID")
     cement_formulation: str = "2 Scoops Powder, 4 Drops Liquid, 1 Drop Catalyst"
     silicone_cover: bool = False
 
 
 @TableRegistry.register(alias="cranial-window")
-class CranialWindow(BaseModel):
+class CranialWindow(Table):
     title: str = Field("Cranial Window", frozen=True)
     subject: str = "E000"
     procedure_date: str = Field(
@@ -137,16 +163,16 @@ class CranialWindow(BaseModel):
     procedure_time: str = Field(
         default_factory=lambda: datetime.now().strftime("%H:%M")
     )
-    headplate_id: str = "N/A"
+    headplate_id: str = Field(default="Plain", alias="Headplate ID")
     window_size: str = "2mm x 1.6mm"
     window_location: str = "-2.75 mm AP, -1.75 mm ML"
     window_quality: str = "Average"
     reused_window: bool = False
-    window_adheson: str = "Kwil-Sil Barrier & Cement"
+    window_adhesion: str = "Kwil-Sil Barrier & Cement"
 
 
 @TableRegistry.register(alias="tamoxifen-injection")
-class TamoxifenInjection(BaseModel):
+class TamoxifenInjection(Table):
     title: str = Field("Tamoxifen Injection", frozen=True)
     subject: str = "E000"
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
@@ -158,7 +184,7 @@ class TamoxifenInjection(BaseModel):
 
 
 @TableRegistry.register(alias="imaging-session")
-class MicroscopeSession(BaseModel):
+class MicroscopeSession(Table):
     title: str = Field("Imaging Session", frozen=True)
     subject: str = "E000"
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
@@ -170,7 +196,7 @@ class MicroscopeSession(BaseModel):
 
 
 @TableRegistry.register(alias="imaging-fov")
-class ImagingFOV(BaseModel):
+class ImagingFOV(Table):
     title: str = Field("Imaging Field of View", frozen=True)
     subject: str = "E000"
     use_meta_file: bool = True
@@ -221,7 +247,7 @@ class ImagingFOV(BaseModel):
 
 
 @TableRegistry.register(alias="imaging-roadmap")
-class ImagingRoadmap(BaseModel):
+class ImagingRoadmap(Table):
     title: str = Field("Imaging Roadmap", frozen=True)
     subject: str = "E000"
     landmark_meta_file: Path | str | None = ""
@@ -353,5 +379,5 @@ def fill_tables(subject: str, tables: list[BaseModel | None]) -> list[dict | Non
         app.mainloop()
 
         # noinspection PyCallingNonCallable
-        filled_tables.append(table(**fields).model_dump())
+        filled_tables.append(table(**fields).model_dump(by_alias=True))
     return filled_tables
