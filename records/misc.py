@@ -3,15 +3,16 @@ from pathlib import Path
 from shutil import copy2
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from records.templates import RecordsTemplate
 
-
 #: Default initial directory for file selection
 _INITIAL_DIRECTORY: Path = Path.cwd()
 
+#: Placeholders Type Alias
+Placeholders: TypeAlias = list[str | None]
 
 def select_file(**kwargs) -> Path | list[Path] | None:
     """
