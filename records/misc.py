@@ -15,7 +15,7 @@ _INITIAL_DIRECTORY: Path = Path.cwd()
 
 def select_file(**kwargs) -> Path | list[Path] | None:
     """
-    Interactive file/files selection. All keyword arguments are
+    Interactive tool for file/files selection. All keyword arguments are
     passed to
     `tkinter.filedialog.askopenfilename <https://docs.python.org/3/library/tk.html>`_
 
@@ -23,8 +23,8 @@ def select_file(**kwargs) -> Path | list[Path] | None:
 
     :return: absolute path to file, list of absolute paths to files, or None
     """
-    global _INITIAL_DIRECTORY # remember for next time
-    
+    global _INITIAL_DIRECTORY
+
     root = Tk()
     file = askopenfilenames(initialdir=_INITIAL_DIRECTORY, **kwargs)
     if str(file) == "." or len(file) == 0:
@@ -83,3 +83,4 @@ def collect_files(
         _copy_files(files, exported_file_directory)
 
     return list(documents.values()), list(images.values()), list(notebooks.values())
+
