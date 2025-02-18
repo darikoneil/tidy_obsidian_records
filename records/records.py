@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from records.files import collect_files
+from records.misc import collect_files
 from records.tables import collect_tables, fill_tables
 from records.templates import RecordsTemplateRegistry, render
 
