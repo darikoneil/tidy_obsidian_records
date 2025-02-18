@@ -5,6 +5,11 @@ from textwrap import indent
 
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from records.misc import Placeholders
+
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -21,13 +26,13 @@ class RecordsTemplate(BaseModel):
     #: Template name
     key: str
     #: Documents included in the template
-    documents: list[str] | None
+    documents: Placeholders | None
     #: Images included in the template
-    images: list[str] | None
+    images: Placeholders | None
     #: Files included in the template
-    files: list[str] | None
+    files: Placeholders | None
     #: Tables included in the template
-    tables: list[str] | None
+    tables: Placeholders | None
 
 
 class RecordsTemplateRegistry:
@@ -127,10 +132,10 @@ class RecordsTemplateRegistry:
 
 
 def add_template(key: str,
-                 documents: list[str] | None = None,
-                 files: list[str] | None = None,
-                 images: list[str] | None = None,
-                 tables: list[str] | None = None,
+                 documents: Placeholders | None = None,
+                 files: Placeholders | None = None,
+                 images: Placeholders | None = None,
+                 tables: Placeholders | None = None,
                  ) -> None:
     """
 
