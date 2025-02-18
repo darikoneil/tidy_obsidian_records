@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, KeysView, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from pydantic_core import PydanticUndefined
 
-from sub_code.imaging.meta import load_metadata
-from records.files import select_file
+from records.prairieview import load_metadata
+from records.misc import select_file
 
 if TYPE_CHECKING:
     from records.templates import RecordsTemplate
