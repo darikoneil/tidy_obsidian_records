@@ -13,7 +13,7 @@ from sub_code.prairview import load_metadata
 from records.misc import select_file
 
 if TYPE_CHECKING:
-    from sub_code.records.templates import RecordsTemplate
+    from records.templates import RecordsTemplate
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
