@@ -5,7 +5,7 @@
             "Registration (PDF)"
         ],
         "images": null,
-        "notebooks": [
+        "files": [
             "Registration (Notebook)"
         ],
         "tables": [
@@ -18,7 +18,7 @@
             "Surgical Sheet"
         ],
         "images": null,
-        "notebooks": null,
+        "files": null,
         "tables": [
             "head-fixation"
         ]
@@ -33,7 +33,7 @@
             "Axial View",
             "Coronal View"
         ],
-        "notebooks": null,
+        "files": null,
         "tables": [
             "cranial-window"
         ]
@@ -42,7 +42,7 @@
         "key": "tamoxifen-injection",
         "documents": null,
         "images": null,
-        "notebooks": null,
+        "files": null,
         "tables": [
             "tamoxifen-injection",
             "tamoxifen-injection",
@@ -58,7 +58,7 @@
             "Imaging Projections",
             "Landmark Projections"
         ],
-        "notebooks": [
+        "files": [
             "imaging (Notebook)"
         ],
         "tables": [
