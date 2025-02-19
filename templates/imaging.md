@@ -9,7 +9,7 @@
 {{ documents[0] }}
 
 #### Expression (Notebook)
-{{ notebooks[0] }}
+{{ files[0] }}
 
 #### Fields of View
 
