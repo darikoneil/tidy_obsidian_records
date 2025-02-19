@@ -286,6 +286,46 @@ class ImagingRoadmap(Table):
         return imaging_roadmap
 
 
+@TableRegistry.register(alias="burrow-session")
+class BurrowSession(Table):
+    title: str = Field("Burrow Session", frozen=True)
+    subject: str = "E000"
+    date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    time: str = Field(default_factory=lambda: datetime.now().strftime("%H:%M"))
+    stage: Literal["Pre-Exposure", "Training", "Testing"] = "Pre-Exposure"
+    condition: Literal["CS+ LOW", "CS+ HIGH"] = "CS+ LOW"
+
+    @computed_field(return_type=bool, alias="Delivered UCS")
+    def delivered_ucs(self) -> bool:
+        return True if self.condition == "Training" else False
+
+
+@TableRegistry.register(alias="burrow-parameters")
+class BurrowParameters(Table):
+    title: str = Field("Burrow Parameters", frozen=True)
+    subject: str = "E000"
+    rail_pressure: str = "60 psi"
+    air_puff_intensity: str = Field(default="80 psi", alias="Air-Puff Intensity")
+    air_puf_duration: str = Field(default="300 ms", alias="Air-Puff Duration")
+    premature_threshold: str = "4.0 V"
+    cue_intensity: str = "70 dB"
+    cue_duration: str = "15 s"
+    low_frequency: str = "10 kHz"
+    low_style: str = "Sine"
+    low_volume: float = 0.0180
+    high_frequency: str = "15 kHz"
+    high_style: str = "Sine"
+    high_volume: float = 0.2100
+    ucs_frequency: str = "1 Hz"
+    ucs_cycles: int = 5
+    ucs_duration: str = "5 s"
+    trials_per_cs: int = 10
+    habituation_duration: str = "15 min"
+    pre_trial_duration: str = "15 s"
+    trace_duration: str = "10 s"
+    response_duration: str = "10 s"
+    iti_duration: str = "90 s"
+
 """
 ////////////////////////////////////////////////////////////////////////////////////////
 // Interactive Filling of Records Tables
