@@ -9,7 +9,7 @@
 {{ documents[0] }}
 
 ### Registration (Notebook)
-{{ notebooks[0] }}
+{{ files[0] }}
 
 ### Notes
 None
