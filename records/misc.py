@@ -74,7 +74,7 @@ def collect_files(
         description: select_file(title=description)
         for description in records_template.images or []
     }
-    notebooks = {
+    files = {
         description: select_file(title=description)
         for description in records_template.files or []
     }
