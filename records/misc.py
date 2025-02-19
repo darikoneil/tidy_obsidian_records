@@ -61,7 +61,7 @@ def collect_files(
     :param subject:
     :param records_template:
     :param exports_directory:
-    :return: The list of files of relevant documents, images, and notebooks
+    :return: The list of files of relevant documents, images, and files
     """
     exported_file_directory = exports_directory.joinpath(subject, "files")
     exported_file_directory.mkdir(exist_ok=True, parents=True)
@@ -76,13 +76,13 @@ def collect_files(
     }
     notebooks = {
         description: select_file(title=description)
-        for description in records_template.notebooks or []
+        for description in records_template.files or []
     }
 
-    for files in chain.from_iterable(
-        [documents.values(), images.values(), notebooks.values()]
+    for files_ in chain.from_iterable(
+        [documents.values(), images.values(), files.values()]
     ):
         _copy_files(files, exported_file_directory)
 
-    return list(documents.values()), list(images.values()), list(notebooks.values())
+    return list(documents.values()), list(images.values()), list(files.values())
 
