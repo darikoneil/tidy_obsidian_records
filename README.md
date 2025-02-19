@@ -1,5 +1,5 @@
 # tidy_obsidian_records
-Generates tidy records that are rendered prettily in obsidian. 
+Generates tidy records that are rendered prettily in obsidian. Requires Python >= 3.10.
 
 ## Usage
 Note: generating records may invoke a popup to manually fill out a table. For records that relate to PrairieView, you can simply press submit immediately, and a pop-up will appear to select the experiment's prairieview meta-files. These will be parsed and used to automatically fill the tables.
