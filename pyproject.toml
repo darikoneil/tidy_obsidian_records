@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "records"
+version = "1.0.0"
+requires-python = ">=3.10, <=4.0"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+{name = "Darik A. O'Neil"}
+]
+dependencies = [
+  "jinja2",
+  "lmxl",
+  "numpy",
+  "pydantic",
+]
+
+[project.urls]
+repository = "https://github.com/darikoneil/tidy_obsidian_records"
+
+[tool.setuptools]
+packages = [
+  "records",
+  "templates",
+]
+
+[tool.setuptools.package-data]
+'templates' = ["*.html", "*.json", ".*md"]
