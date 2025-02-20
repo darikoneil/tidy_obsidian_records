@@ -5,10 +5,12 @@
 {{ tables[0] }}
 {% endfilter %}
 
-### Registration (PDF)
+### Registration
+
+#### PDF:
 {{ documents[0] }}
 
-### Registration (Notebook)
+#### Notebook:
 {{ files[0] }}
 
 ### Notes

@@ -10,7 +10,8 @@
         ],
         "tables": [
             "mouse-information"
-            ]
+            ],
+        "special": null
     },
     "head-fixation": {
         "key": "head-fixation",
@@ -21,8 +22,9 @@
         "files": null,
         "tables": [
             "head-fixation"
-        ]
-    },
+        ],
+        "special": null
+},
     "cranial-window": {
         "key": "cranial-window",
         "documents": [
@@ -36,8 +38,9 @@
         "files": null,
         "tables": [
             "cranial-window"
-        ]
-    },
+        ],
+        "special": null
+},
     "tamoxifen-injection":{
         "key": "tamoxifen-injection",
         "documents": null,
@@ -47,24 +50,38 @@
             "tamoxifen-injection",
             "tamoxifen-injection",
             "tamoxifen-injection"
-        ]
-    },
-    "imaging": {
-        "key": "imaging",
+        ],
+        "special": null
+},
+    "burrow": {
+        "key": "burrow",
+        "documents": null,
+        "images": null,
+        "files": null,
+        "tables": [
+            "burrow-session",
+            "burrow-parameters"
+        ],
+        "special": null
+},
+    "slm-imaging": {
+        "key": "slm-imaging",
         "documents": [
-            "imaging (PDF)"
+            "imaging expression (PDF/s)"
         ],
         "images": [
-            "Imaging Projections",
+            "Mean Projections",
             "Landmark Projections"
         ],
         "files": [
-            "imaging (Notebook)"
+            "imaging expression (Notebook/s)"
         ],
         "tables": [
-            "imaging-session",
+            "microscope-session"
+        ],
+        "special": [
             "imaging-fov",
-            "imaging-fov",
+            "multiplane-slm",
             "imaging-roadmap"
         ]
     }
