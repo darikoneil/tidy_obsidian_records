@@ -1,37 +1,37 @@
 ### Imaging Session
 {% call_function imaging_meta_file = 'get_imaging_meta_file' %}
-{% call function landmark_meta_file = 'get_landmark_meta_file' %}
+{% call_function landmark_meta_file = 'get_landmark_meta_file' %}
 {% set planes_slm = special[1] | special_multiplane_slm(environment) %}
-{% set planes_slm = planes_slm | split_to_list %}
 {% set planes_proj = images[0] %}
-{% set num_planes = plane_slm | length %}
 
 #### Session
 {% filter indent(width=0) %}
-{{ tables[0] }}
+{{ tables[0] | render_table(environment)}}
 {% endfilter %}
 
-##### Records
+#### Records
 {% filter indent(width=0) %}
 {{ special[0] | special_imaging_fov(imaging_meta_file, environment) }}
 {% endfilter %}
 
-#### Expression (PDF)
-{{ documents[0] | render_links(5)}}
+#### Expression
 
-#### Expression (Notebook)
-{{ files[0] | render_links(5)}}
+##### PDF
+{{ documents[0] | render_links(6)}}
+
+##### Notebook
+{{ files[0] | render_links(6)}}
 
 #### Fields of View
-{% for plane in range(num_planes) %}
+{% for plane in range(planes_slm|length) %}
 
 ###### Metadata
 {% filter indent(width=0) %}
 {{ planes_slm[plane] }}
 {% endfilter %}
 
-###### Projection
-{{ planes_proj[plane] | render_links(6)}}
+###### Z-Projection (STD)
+{{ planes_proj[plane] | render_links(5)}}
 {% endfor %}
 
 #### Landmarks
@@ -42,11 +42,11 @@
 {% endfilter %}
 
 ##### Landmark Projections
-{{ images[1] }}
+{{ images[1] | render_links(6)}}
 
 #### Roadmap
 {% filter indent(width=0) %}
-#{{ special[2] | special_imaging_roadmap(imaging_meta_file, landmark_meta_file, environment) }}
+{{ special[2] | special_imaging_roadmap(imaging_meta_file, landmark_meta_file, environment) }}
 {% endfilter %}
 
 #### Notes
