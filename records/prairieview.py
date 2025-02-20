@@ -6,6 +6,7 @@ import numpy as np
 from lxml import etree as ET
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 from pydantic.alias_generators import to_camel, to_snake
+from scipy.io import loadmat
 
 
 def _custom_camel_alias(snake: str) -> str:
@@ -236,8 +237,34 @@ def get_num_planes_num_channels(root: ET.Element) -> tuple[int, int]:
     return len(pv_sequence), len(pv_sequence[0].findall("File"))
 
 
+def load_plane_metadata(file: Path) -> dict:
+    """
+    Load the plane metadata from a multiplane file.
+
+    :param file:
+    :return:
+    """
+    metadata = loadmat(str(file))
+    planes = metadata["scan_data"]["planes"]
+    num_planes = len(planes[0][0])
+    plane_metadata = {}
+    for p in range(num_planes):
+        plane = planes[0][0][p]
+        plane_metadata[p] = {
+            "idx": plane[0][0][0][0][0][0],
+            "pattern": plane[0][0][0][1][0][0],
+            "x": plane[0][0][0][2][0][0],
+            "y": plane[0][0][0][3][0][0],
+            "z": plane[0][0][0][4][0][0],
+            "i_targ": plane[0][0][0][5][0][0],
+            "i_est": plane[0][0][0][6][0][0],
+            "w_est": plane[0][0][0][7][0][0],
+        }
+    return plane_metadata
+
+
 def load_metadata(
-    xml_file: Path = TEST_FILE,
+    xml_file: Path,
     component: Literal[
         "session", "system_id", "imaging_meta", "sequence_meta", None
     ] = None,
