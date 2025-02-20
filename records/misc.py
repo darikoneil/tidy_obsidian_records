@@ -3,7 +3,7 @@ from pathlib import Path
 from shutil import copy2
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames
-from typing import TYPE_CHECKING, TypeAlias, Any
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from sub_code.records.templates import RecordsTemplate

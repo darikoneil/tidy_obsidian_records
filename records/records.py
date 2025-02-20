@@ -2,9 +2,8 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from sub_code.records.tables import collect_special
 from sub_code.records.misc import collect_files
-from sub_code.records.tables import collect_tables, fill_tables
+from sub_code.records.tables import collect_special, collect_tables, fill_tables
 from sub_code.records.templates import RecordsTemplateRegistry, render
 
 #: Default templates directory
@@ -43,13 +42,7 @@ def generate_records(
     tables = fill_tables(subject, tables)
     special = collect_special(records_template)
     records = render(
-        templates_directory,
-        key,
-        documents,
-        images,
-        files,
-        tables,
-        special
+        templates_directory, key, documents, images, files, tables, special
     )
     records_filename = exports_directory.joinpath(f"{subject}", f"{subject}_{key}.md")
     with open(records_filename, "w") as file:

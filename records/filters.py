@@ -1,7 +1,10 @@
-from jinja2 import Environment
-from sub_code.records.misc import select_file
-from sub_code.imaging.meta import load_plane_metadata
 from pathlib import Path
+
+from jinja2 import Environment
+
+from sub_code.imaging.meta import load_plane_metadata
+from sub_code.records.misc import select_file
+
 
 class FilterRegistry:
     __registry = {}
@@ -11,6 +14,7 @@ class FilterRegistry:
         def wrapper(func):
             cls.__registry[name] = func
             return func
+
         return wrapper
 
     @classmethod
@@ -27,15 +31,6 @@ def _set_html_value_types(rendering: str) -> str:
         elif "date" in lowered or "dob" in lowered:
             lines[idx] = line.replace('type="text"', 'type="date"')
     return "<tr>".join(lines)
-
-@FilterRegistry.register("special_imaging_meta_file")
-def special_imaging_meta_file() -> Path:
-    return select_file(title="Select the imaging metadata file")
-
-
-@FilterRegistry.register("special_landmark_meta_file")
-def special_landmark_meta_file() -> Path:
-    return select_file(title="Select the landmark metadata file")
 
 
 @FilterRegistry.register("render_table")
@@ -62,8 +57,12 @@ def render_links(link: Path | list | None, header_level: int = 5) -> str:
 def special_multiplane_slm(implementation, environment) -> str:
     metadata_file = select_file(title="Select the multiplane slm metadata file")
     plane_metadata = load_plane_metadata(metadata_file)
-    filled_tables = [implementation(metadata_file=metadata_file, **metadata).model_dump(by_alias=True)
-                     for metadata in plane_metadata.values()]
+    filled_tables = [
+        implementation(metadata_file=metadata_file, **metadata).model_dump(
+            by_alias=True
+        )
+        for metadata in plane_metadata.values()
+    ]
     rendered_tables = [render_table(table, environment) for table in filled_tables]
     return "\n".join(rendered_tables)
 
@@ -75,12 +74,13 @@ def special_imaging_fov(implementation, metadata_file, environment) -> str:
 
 
 @FilterRegistry.register("special_imaging_roadmap")
-def special_imaging_roadmap(implementation,
-                            imaging_metadata_file,
-                            landmark_metadata_file,
-                            environment) -> str:
-    filled_table = implementation(imaging_metadata_file=imaging_metadata_file,
-                                  landmark_metadata_file=landmark_metadata_file).model_dump(by_alias=True)
+def special_imaging_roadmap(
+    implementation, imaging_metadata_file, landmark_metadata_file, environment
+) -> str:
+    filled_table = implementation(
+        imaging_metadata_file=imaging_metadata_file,
+        landmark_metadata_file=landmark_metadata_file,
+    ).model_dump(by_alias=True)
     return render_table(filled_table, environment)
 
 

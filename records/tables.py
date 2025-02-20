@@ -6,8 +6,14 @@ from pathlib import Path
 from tkinter import ttk
 from typing import TYPE_CHECKING, Any, KeysView, Literal
 
-from pydantic import (BaseModel, Field, field_validator, model_validator, ConfigDict,
-                      computed_field)
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 from pydantic_core import PydanticUndefined
 
 from sub_code.imaging.meta import load_metadata
@@ -22,6 +28,7 @@ if TYPE_CHECKING:
 // Records Table Registry
 ////////////////////////////////////////////////////////////////////////////////////////
 """
+
 
 def _gen_field_alias(field_name: str) -> str:
     """
@@ -40,9 +47,7 @@ class Table(BaseModel):
     """
 
     title: str
-    model_config = ConfigDict(alias_generator=_gen_field_alias,
-                              populate_by_name=True)
-
+    model_config = ConfigDict(alias_generator=_gen_field_alias, populate_by_name=True)
 
     def __str__(self):
         return self.title
@@ -121,8 +126,9 @@ class MouseInformation(Table):
     title: str = Field("Mouse Information", frozen=True)
     subject: str = "E000"
     cage: str = "000000"
-    dob: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"),
-                     alias="DOB")
+    dob: str = Field(
+        default_factory=lambda: datetime.now().strftime("%Y-%m-%d"), alias="DOB"
+    )
     gender: Literal["Male", "Female"] = "Female"
     headplate_id: str = Field(default="Plain", alias="Headplate ID")
     condition: str = "N/A"
@@ -189,7 +195,7 @@ class TamoxifenInjection(Table):
     volume: float = 0.30
 
 
-@TableRegistry.register(alias="imaging-session")
+@TableRegistry.register(alias="microscope-session")
 class MicroscopeSession(Table):
     title: str = Field("Imaging Session", frozen=True)
     subject: str = "E000"
@@ -205,7 +211,7 @@ class MicroscopeSession(Table):
 class ImagingFOV(Table):
     title: str = Field("Imaging Field of View", frozen=True)
     subject: str = "E000"
-    meta_file: Path | str | None = ""
+    metadata_file: Path | str | None = ""
     objective_lens: str | None = ""
     laser_power: float | None = 0.0
     pmt_gain: int | None = 0
@@ -225,7 +231,7 @@ class ImagingFOV(Table):
     @model_validator(mode="after")
     @classmethod
     def validate_imaging_fov(cls, imaging_fov: "ImagingFOV") -> "ImagingFOV":
-        meta = load_metadata(imaging_fov.meta_file)
+        meta = load_metadata(imaging_fov.metadata_file)
         imaging_meta = meta.imaging_meta
         imaging_fov.objective_lens = imaging_meta.objective_lens
         imaging_fov.laser_power = imaging_meta.laser_power.imaging
@@ -235,7 +241,7 @@ class ImagingFOV(Table):
         imaging_fov.lines_per_frame = imaging_meta.lines_per_frame
         imaging_fov.pixels_per_line = imaging_meta.pixels_per_line
         imaging_fov.microns_per_pixel = imaging_meta.microns_per_pixel
-        imaging_fov.frame_rate = (1 / imaging_meta.frame_period)
+        imaging_fov.frame_rate = 1 / imaging_meta.frame_period
         imaging_fov.x = imaging_meta.position_current.x_axis
         imaging_fov.y = imaging_meta.position_current.y_axis
         imaging_fov.z = imaging_meta.position_current.z_axis_z_focus
@@ -261,14 +267,6 @@ class ImagingRoadmap(Table):
     def validate_imaging_roadmap(
         cls, imaging_roadmap: "ImagingRoadmap"
     ) -> "ImagingRoadmap":
-        if imaging_roadmap.landmark_meta_file == "":
-            imaging_roadmap.landmark_meta_file = select_file(
-                title="Select Landmark Meta File"
-            )
-        if imaging_roadmap.imaging_meta_file == "":
-            imaging_roadmap.imaging_meta_file = select_file(
-                title="Select Imaging Meta File"
-            )
         imaging_meta = load_metadata(imaging_roadmap.imaging_meta_file, "imaging_meta")
         landmark_meta = load_metadata(
             imaging_roadmap.landmark_meta_file, "imaging_meta"

@@ -2,11 +2,14 @@ import json
 from functools import partial
 from pathlib import Path
 from textwrap import indent
+from typing import TYPE_CHECKING
+
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
+
+from sub_code.records.extensions import add_extensions
+from sub_code.records.filters import add_filters, render_links, render_table
 from sub_code.records.misc import Placeholders
-from typing import TYPE_CHECKING
-from sub_code.records.filters import render_links, add_filters, render_table
 
 if TYPE_CHECKING:
     from sub_code.records.tables import Table
@@ -133,21 +136,24 @@ class RecordsTemplateRegistry:
             cls._save()
 
 
-def add_template(key: str,
-                 documents: Placeholders | None = None,
-                 files: Placeholders | None = None,
-                 images: Placeholders | None = None,
-                 tables: Placeholders | None = None,
-                 special: Placeholders | None = None,
-                 ) -> None:
+def add_template(
+    key: str,
+    documents: Placeholders | None = None,
+    files: Placeholders | None = None,
+    images: Placeholders | None = None,
+    tables: Placeholders | None = None,
+    special: Placeholders | None = None,
+) -> None:
 
     with RecordsTemplateRegistry() as registry:
-        template = RecordsTemplate(key=key,
-                                   documents=documents,
-                                   images=images,
-                                   files=files,
-                                   tables=tables,
-                                   special=special)
+        template = RecordsTemplate(
+            key=key,
+            documents=documents,
+            images=images,
+            files=files,
+            tables=tables,
+            special=special,
+        )
         registry.register(template)
 
 
@@ -173,10 +179,11 @@ def render(
         lstrip_blocks=True,
     )
     environment = add_filters(environment)
+    environment = add_extensions(environment)
     template = environment.get_template(f"{key}.md")
     render_table_ = partial(render_table, environment=environment)
     return template.render(
-        documents=documents,
+        documents=[render_links(document) for document in documents],
         images=[render_links(image) for image in images],
         files=[render_links(file) for file in files],
         tables=[render_table_(records=table) for table in tables],
