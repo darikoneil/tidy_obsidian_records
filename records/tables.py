@@ -6,14 +6,16 @@ from pathlib import Path
 from tkinter import ttk
 from typing import TYPE_CHECKING, Any, KeysView, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from pydantic import (BaseModel, Field, field_validator, model_validator, ConfigDict,
+                      computed_field)
 from pydantic_core import PydanticUndefined
 
-from sub_code.prairview import load_metadata
-from records.misc import select_file
+from sub_code.imaging.meta import load_metadata
+from sub_code.records.misc import select_file
 
 if TYPE_CHECKING:
-    from records.templates import RecordsTemplate
+    from sub_code.records.templates import RecordsTemplate
+
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +103,10 @@ def collect_tables(records_template: "RecordsTemplate") -> list[Table | None]:
     :return: A list of records tables (or an empty list)
     """
     return [TableRegistry.get(table) for table in records_template.tables or []]
+
+
+def collect_special(records_template: "RecordsTemplate") -> list[Table | None]:
+    return [TableRegistry.get(table) for table in records_template.special or []]
 
 
 """
@@ -199,7 +205,6 @@ class MicroscopeSession(Table):
 class ImagingFOV(Table):
     title: str = Field("Imaging Field of View", frozen=True)
     subject: str = "E000"
-    use_meta_file: bool = True
     meta_file: Path | str | None = ""
     objective_lens: str | None = ""
     laser_power: float | None = 0.0
@@ -220,29 +225,24 @@ class ImagingFOV(Table):
     @model_validator(mode="after")
     @classmethod
     def validate_imaging_fov(cls, imaging_fov: "ImagingFOV") -> "ImagingFOV":
-        if imaging_fov.use_meta_file:
-            if imaging_fov.meta_file == "":
-                imaging_fov.meta_file = select_file(title="Select Imaging Meta File")
-            meta = load_metadata(imaging_fov.meta_file)
-            imaging_meta = meta.imaging_meta
-            imaging_fov.objective_lens = imaging_meta.objective_lens
-            imaging_fov.laser_power = imaging_meta.laser_power.imaging
-            imaging_fov.pmt_gain = imaging_meta.pmt_gain.pmt_2_green
-            imaging_fov.preamp_filter = imaging_meta.preamp_filter
-            imaging_fov.optical_zoom = imaging_meta.optical_zoom
-            imaging_fov.lines_per_frame = imaging_meta.lines_per_frame
-            imaging_fov.pixels_per_line = imaging_meta.pixels_per_line
-            imaging_fov.microns_per_pixel = imaging_meta.microns_per_pixel
-            imaging_fov.frame_rate = (1 / imaging_meta.frame_period) * 1000
-            imaging_fov.x = imaging_meta.position_current.x_axis
-            imaging_fov.y = imaging_meta.position_current.y_axis
-            imaging_fov.z = imaging_meta.position_current.z_axis_z_focus
-            imaging_fov.planes = meta.sequence_meta.num_planes
-            imaging_fov.channels = meta.sequence_meta.num_channels
-            imaging_fov.effective_frame_rate = (
-                imaging_fov.frame_rate / imaging_fov.planes
-            )
-
+        meta = load_metadata(imaging_fov.meta_file)
+        imaging_meta = meta.imaging_meta
+        imaging_fov.objective_lens = imaging_meta.objective_lens
+        imaging_fov.laser_power = imaging_meta.laser_power.imaging
+        imaging_fov.pmt_gain = imaging_meta.pmt_gain.pmt_2_green
+        imaging_fov.preamp_filter = imaging_meta.preamp_filter
+        imaging_fov.optical_zoom = imaging_meta.optical_zoom
+        imaging_fov.lines_per_frame = imaging_meta.lines_per_frame
+        imaging_fov.pixels_per_line = imaging_meta.pixels_per_line
+        imaging_fov.microns_per_pixel = imaging_meta.microns_per_pixel
+        imaging_fov.frame_rate = (1 / imaging_meta.frame_period)
+        imaging_fov.x = imaging_meta.position_current.x_axis
+        imaging_fov.y = imaging_meta.position_current.y_axis
+        imaging_fov.z = imaging_meta.position_current.z_axis_z_focus
+        imaging_fov.planes = meta.sequence_meta.num_planes
+        imaging_fov.channels = meta.sequence_meta.num_channels
+        fr = (imaging_fov.frame_rate - 4.0 * imaging_fov.planes) / imaging_fov.planes
+        imaging_fov.effective_frame_rate = fr
         return imaging_fov
 
 
@@ -316,15 +316,30 @@ class BurrowParameters(Table):
     high_frequency: str = "15 kHz"
     high_style: str = "Sine"
     high_volume: float = 0.2100
-    ucs_frequency: str = "1 Hz"
-    ucs_cycles: int = 5
-    ucs_duration: str = "5 s"
-    trials_per_cs: int = 10
+    ucs_frequency: str = Field(default="1 Hz", alias="UCS Frequency")
+    ucs_cycles: int = Field(default=5, alias="UCS Cycles")
+    ucs_duration: str = Field(default="5 s", alias="UCS Duration")
+    trials_per_cs: int = Field(default=10, alias="Trials per CS")
     habituation_duration: str = "15 min"
-    pre_trial_duration: str = "15 s"
+    pre_trial_duration: str = Field(default="15 s", alias="Pre-Trial Duration")
     trace_duration: str = "10 s"
     response_duration: str = "10 s"
-    iti_duration: str = "90 s"
+    iti_duration: str = Field("90 s", alias="ITI Duration")
+
+
+@TableRegistry.register(alias="multiplane-slm")
+class MultiplaneSLM(Table):
+    title: str = Field("Multiplane SLM", frozen=True)
+    subject: str = "E000"
+    idx: int = Field(default=0, alias="Plane #")
+    pattern: int = Field(default=0, alias="Pattern #")
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    i_targ: float = Field(default=1.0, alias="Target Intensity")
+    i_est: float = Field(default=1.0, alias="Estimated Intensity")
+    w_est: float = Field(default=1.0, alias="Weight Estimate")
+
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////

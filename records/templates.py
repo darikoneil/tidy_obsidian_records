@@ -2,14 +2,14 @@ import json
 from functools import partial
 from pathlib import Path
 from textwrap import indent
-
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
+from sub_code.records.misc import Placeholders
 from typing import TYPE_CHECKING
+from sub_code.records.filters import render_links, add_filters, render_table
 
-
-from records.misc import Placeholders
-
+if TYPE_CHECKING:
+    from sub_code.records.tables import Table
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -27,10 +27,12 @@ class RecordsTemplate(BaseModel):
     key: str
     #: Documents included in the template
     documents: Placeholders | None
-    #: Images included in the template
-    images: Placeholders | None
     #: Files included in the template
     files: Placeholders | None
+    #: Images included in the template
+    images: Placeholders | None
+    #: Special placeholders for the template
+    special: Placeholders | None
     #: Tables included in the template
     tables: Placeholders | None
 
@@ -136,23 +138,16 @@ def add_template(key: str,
                  files: Placeholders | None = None,
                  images: Placeholders | None = None,
                  tables: Placeholders | None = None,
+                 special: Placeholders | None = None,
                  ) -> None:
-    """
-
-    :param key:
-    :param documents:
-    :param files:
-    :param images:
-    :param tables:
-    :return:
-    """
 
     with RecordsTemplateRegistry() as registry:
         template = RecordsTemplate(key=key,
                                    documents=documents,
                                    images=images,
                                    files=files,
-                                   tables=tables)
+                                   tables=tables,
+                                   special=special)
         registry.register(template)
 
 
@@ -163,34 +158,6 @@ def add_template(key: str,
 """
 
 
-def _set_html_value_types(rendering: str) -> str:
-    lines = rendering.split("<tr>")
-    for idx, line in enumerate(lines):
-        lowered = line.lower()
-        if "time" in lowered:
-            lines[idx] = line.replace('type="text"', 'type="time"')
-        elif "date" in lowered or "dob" in lowered:
-            lines[idx] = line.replace('type="text"', 'type="date"')
-    return "<tr>".join(lines)
-
-
-def render_links(link: Path | None, header_level: int = 5) -> str:
-    header = "#" * header_level
-    if isinstance(link, list):
-        links = "\n"
-        for link_ in link:
-            links += f"{header} {link_.stem}\n"
-            links += f"![[files/{link_.name}]]\n"
-        return links
-    return f"![[files/{link.name}]]"
-
-
-def render_table(environment: Environment, records: dict) -> str:
-    template = environment.get_template("table.html")
-    rendered_table = template.render(records=records)
-    return _set_html_value_types(rendered_table)
-
-
 def render(
     templates_directory: Path,
     key: str,
@@ -198,17 +165,21 @@ def render(
     images: list[Path | None],
     files: list[str | None],
     tables: list[dict | None],
+    special: list["Table"] | list[None],
 ) -> str:
     environment = Environment(
         loader=FileSystemLoader(str(templates_directory)),
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    environment = add_filters(environment)
     template = environment.get_template(f"{key}.md")
     render_table_ = partial(render_table, environment=environment)
     return template.render(
-        documents=[render_links(document) for document in documents],
+        documents=documents,
         images=[render_links(image) for image in images],
         files=[render_links(file) for file in files],
         tables=[render_table_(records=table) for table in tables],
+        special=special,
+        environment=environment,
     )

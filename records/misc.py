@@ -3,10 +3,11 @@ from pathlib import Path
 from shutil import copy2
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Any
 
 if TYPE_CHECKING:
-    from records.templates import RecordsTemplate
+    from sub_code.records.templates import RecordsTemplate
+
 
 #: Default initial directory for file selection
 _INITIAL_DIRECTORY: Path = Path.cwd()
@@ -82,7 +83,6 @@ def collect_files(
     for files_ in chain.from_iterable(
         [documents.values(), images.values(), files.values()]
     ):
-        _copy_files(files, exported_file_directory)
+        _copy_files(files_, exported_file_directory)
 
     return list(documents.values()), list(images.values()), list(files.values())
-
