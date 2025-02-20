@@ -45,7 +45,7 @@ def select_file(**kwargs) -> Path | list[Path] | None:
     return file
 
 
-def _copy_files(files: Path | list[Path], exported_file_directory: Path):
+def _copy_files(files: Path | list[Path], exported_file_directory: Path) -> None:
     if isinstance(files, Path):
         copy2(files, exported_file_directory.joinpath(files.name))
     elif isinstance(files, list):

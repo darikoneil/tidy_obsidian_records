@@ -1,4 +1,6 @@
+import re
 from pathlib import Path
+from typing import Callable, ItemsView
 
 from jinja2 import Environment
 
@@ -6,19 +8,25 @@ from sub_code.imaging.meta import load_plane_metadata
 from sub_code.records.misc import select_file
 
 
+"""
+Called filters by jinja convention, really like functions that operate on a value.
+Extensions in the extensions module operate on a value adn return something new.
+"""
+
+
 class FilterRegistry:
     __registry = {}
 
     @classmethod
-    def register(cls, name):
-        def wrapper(func):
-            cls.__registry[name] = func
+    def register(cls, alias: str | None = None):  # noqa: ANN001, ANN201, ANN206
+        def wrapper(func):  # noqa: ANN001, ANN201, ANN206
+            cls.__registry[alias or func.__name__] = func
             return func
 
         return wrapper
 
     @classmethod
-    def get_filters(cls):
+    def get_filters(cls) -> ItemsView[str, Callable]:
         return cls.__registry.items()
 
 
@@ -33,15 +41,17 @@ def _set_html_value_types(rendering: str) -> str:
     return "<tr>".join(lines)
 
 
-@FilterRegistry.register("render_table")
+@FilterRegistry.register()
 def render_table(records: dict, environment: Environment) -> str:
     template = environment.get_template("table.html")
     rendered_table = template.render(records=records)
     return _set_html_value_types(rendered_table)
 
 
-@FilterRegistry.register("render_links")
-def render_links(link: Path | list | None, header_level: int = 5) -> str:
+@FilterRegistry.register()
+def render_links(link: str | Path | list | None, header_level: int = 5) -> str:
+    if isinstance(link, str):
+        link = Path(link)
     if isinstance(link, list):
         header = "#" * header_level
         links = "\n"
@@ -53,27 +63,25 @@ def render_links(link: Path | list | None, header_level: int = 5) -> str:
         return f"![[files/{link.name}]]"
 
 
-@FilterRegistry.register("special_multiplane_slm")
-def special_multiplane_slm(implementation, environment) -> str:
+@FilterRegistry.register()
+def special_multiplane_slm(implementation, environment) -> list[str]:
     metadata_file = select_file(title="Select the multiplane slm metadata file")
     plane_metadata = load_plane_metadata(metadata_file)
     filled_tables = [
-        implementation(metadata_file=metadata_file, **metadata).model_dump(
-            by_alias=True
-        )
+        implementation(**metadata).model_dump(by_alias=True)
         for metadata in plane_metadata.values()
     ]
     rendered_tables = [render_table(table, environment) for table in filled_tables]
-    return "\n".join(rendered_tables)
+    return rendered_tables
 
 
-@FilterRegistry.register("special_imaging_fov")
+@FilterRegistry.register()
 def special_imaging_fov(implementation, metadata_file, environment) -> str:
     filled_table = implementation(metadata_file=metadata_file).model_dump(by_alias=True)
     return render_table(filled_table, environment)
 
 
-@FilterRegistry.register("special_imaging_roadmap")
+@FilterRegistry.register()
 def special_imaging_roadmap(
     implementation, imaging_metadata_file, landmark_metadata_file, environment
 ) -> str:
@@ -84,9 +92,14 @@ def special_imaging_roadmap(
     return render_table(filled_table, environment)
 
 
-@FilterRegistry.register("split_to_list")
-def split_to_list(string: str) -> list:
-    return string.split("\n")
+@FilterRegistry.register()
+def debug(value) -> None:
+    print(f"{value=}")
+
+
+@FilterRegistry.register()
+def split_rendered_images(images: str) -> list[str]:
+    return [f"![[{image}]]" for image in re.findall(r"!\[\[(.*?)]]", images)]
 
 
 def add_filters(environment: Environment) -> Environment:

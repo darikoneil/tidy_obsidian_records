@@ -1,5 +1,4 @@
 import json
-from functools import partial
 from pathlib import Path
 from textwrap import indent
 from typing import TYPE_CHECKING
@@ -8,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 
 from sub_code.records.extensions import add_extensions
-from sub_code.records.filters import add_filters, render_links, render_table
+from sub_code.records.filters import add_filters
 from sub_code.records.misc import Placeholders
 
 if TYPE_CHECKING:
@@ -169,8 +168,8 @@ def render(
     key: str,
     documents: list[Path | None],
     images: list[Path | None],
-    files: list[str | None],
-    tables: list[dict | None],
+    files: list[Path | None],
+    tables: list["Table"] | list[None],
     special: list["Table"] | list[None],
 ) -> str:
     environment = Environment(
@@ -181,12 +180,11 @@ def render(
     environment = add_filters(environment)
     environment = add_extensions(environment)
     template = environment.get_template(f"{key}.md")
-    render_table_ = partial(render_table, environment=environment)
     return template.render(
-        documents=[render_links(document) for document in documents],
-        images=[render_links(image) for image in images],
-        files=[render_links(file) for file in files],
-        tables=[render_table_(records=table) for table in tables],
+        documents=documents,
+        images=images,
+        files=files,
+        tables=tables,
         special=special,
         environment=environment,
     )

@@ -13,11 +13,11 @@ from pydantic import (
     computed_field,
     field_validator,
     model_validator,
+    field_serializer
 )
 from pydantic_core import PydanticUndefined
 
 from sub_code.imaging.meta import load_metadata
-from sub_code.records.misc import select_file
 
 if TYPE_CHECKING:
     from sub_code.records.templates import RecordsTemplate
@@ -63,18 +63,15 @@ class TableRegistry:
     __registry: dict = {}
 
     @classmethod
-    def register(cls, alias: str | None = None):
+    def register(cls, alias: str | None = None):  # noqa: ANN001, ANN201, ANN206
         """
         A decorator to register a new records table
 
         :param alias: An alias for the table used as an additional key for retrieval
         """
 
-        def register_table(table):
-            nonlocal alias
-            if alias:
-                cls.__registry[alias] = table
-            cls.__registry[table.__name__] = table
+        def register_table(table):  # noqa: ANN001, ANN201, ANN206
+            cls.__registry[alias or table.__name__] = table
             return table
 
         return register_table
@@ -110,13 +107,20 @@ def collect_tables(records_template: "RecordsTemplate") -> list[Table | None]:
     return [TableRegistry.get(table) for table in records_template.tables or []]
 
 
-def collect_special(records_template: "RecordsTemplate") -> list[Table | None]:
-    return [TableRegistry.get(table) for table in records_template.special or []]
+"""
+////////////////////////////////////////////////////////////////////////////////////////
+// SPECIAL
+////////////////////////////////////////////////////////////////////////////////////////
+"""
+
+
+def collect_special(records_template: "RecordsTemplate") -> list[Any | None]:
+    return [TableRegistry.get(special) for special in records_template.special or []]
 
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
-// Records Tables
+// Records Tables (GENERAL)
 ////////////////////////////////////////////////////////////////////////////////////////
 """
 
@@ -138,7 +142,7 @@ class MouseInformation(Table):
 
     @field_validator("cage", mode="before")
     @classmethod
-    def validate_cage(cls, value: Any):
+    def validate_cage(cls, value: Any) -> Any:
         if isinstance(value, int):
             value = f"{value:06d}"
         if isinstance(value, str):
@@ -148,6 +152,13 @@ class MouseInformation(Table):
             return value
         else:
             raise ValueError("Cage number must be a 6-digit integer")
+
+
+"""
+////////////////////////////////////////////////////////////////////////////////////////
+// SURGICAL
+////////////////////////////////////////////////////////////////////////////////////////
+"""
 
 
 @TableRegistry.register(alias="head-fixation")
@@ -195,13 +206,20 @@ class TamoxifenInjection(Table):
     volume: float = 0.30
 
 
+"""
+////////////////////////////////////////////////////////////////////////////////////////
+// IMAGING
+////////////////////////////////////////////////////////////////////////////////////////
+"""
+
+
 @TableRegistry.register(alias="microscope-session")
 class MicroscopeSession(Table):
     title: str = Field("Imaging Session", frozen=True)
     subject: str = "E000"
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     time: str = Field(default_factory=lambda: datetime.now().strftime("%H:%M"))
-    relative_humidity: float = 5.0
+    relative_humidity: str = "5%"
     imaging_wavelength: str = "920 nm"
     stimulation_wavelength: str = "None"
     slm: bool = True
@@ -214,7 +232,7 @@ class ImagingFOV(Table):
     metadata_file: Path | str | None = ""
     objective_lens: str | None = ""
     laser_power: float | None = 0.0
-    pmt_gain: int | None = 0
+    pmt_gain: int | float| None = 0
     preamp_filter: str | None = "None"
     optical_zoom: float | None = 1.0
     lines_per_frame: int | None = 0
@@ -251,13 +269,32 @@ class ImagingFOV(Table):
         imaging_fov.effective_frame_rate = fr
         return imaging_fov
 
+    @field_serializer("laser_power",
+                        "microns_per_pixel",
+                        "pmt_gain",
+                        "optical_zoom",
+                        "frame_rate",
+                        "effective_frame_rate",
+                        "x",
+                        "y",
+                        "z",
+                        mode="plain")
+    @classmethod
+    def serialize_float(cls, value: float | tuple) -> str:
+        if value is not None:
+            if isinstance(value, tuple):
+                values = [f"{v:.2f}" for v in value]
+                return "(" + ", ".join(values) + ")"
+            else:
+                return f"{value:.2f}"
+
 
 @TableRegistry.register(alias="imaging-roadmap")
 class ImagingRoadmap(Table):
     title: str = Field("Imaging Roadmap", frozen=True)
     subject: str = "E000"
-    landmark_meta_file: Path | str | None = ""
-    imaging_meta_file: Path | str | None = ""
+    landmark_metadata_file: Path | str | None = ""
+    imaging_metadata_file: Path | str | None = ""
     relative_x_position: float = 0.0
     relative_y_position: float = 0.0
     relative_z_position: float = 0.0
@@ -267,9 +304,11 @@ class ImagingRoadmap(Table):
     def validate_imaging_roadmap(
         cls, imaging_roadmap: "ImagingRoadmap"
     ) -> "ImagingRoadmap":
-        imaging_meta = load_metadata(imaging_roadmap.imaging_meta_file, "imaging_meta")
+        imaging_meta = load_metadata(
+            imaging_roadmap.imaging_metadata_file, "imaging_meta"
+        )
         landmark_meta = load_metadata(
-            imaging_roadmap.landmark_meta_file, "imaging_meta"
+            imaging_roadmap.landmark_metadata_file, "imaging_meta"
         )
         imaging_roadmap.relative_x_position = (
             imaging_meta.position_current.x_axis - landmark_meta.position_current.x_axis
@@ -283,6 +322,54 @@ class ImagingRoadmap(Table):
         )
         return imaging_roadmap
 
+    @field_serializer("relative_x_position",
+                        "relative_y_position",
+                        "relative_z_position",
+                        mode="plain")
+    @classmethod
+    def serialize_float(cls, value: float | tuple) -> str:
+        if value is not None:
+            if isinstance(value, tuple):
+                values = [f"{v:.2f}" for v in value]
+                return "(" + ", ".join(values) + ")"
+            else:
+                return f"{value:.2f}"
+
+@TableRegistry.register(alias="multiplane-slm")
+class MultiplaneSLM(Table):
+    title: str = Field("Multiplane SLM", frozen=True)
+    idx: int = Field(default=0, alias="Plane #")
+    pattern: int = Field(default=0, alias="Pattern #")
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    i_targ: float = Field(default=1.0, alias="Target Intensity")
+    i_est: float = Field(default=1.0, alias="Estimated Intensity")
+    w_est: float = Field(default=1.0, alias="Weight Estimate")
+
+    @field_serializer("x",
+                      "y",
+                        "z",
+                      "i_targ",
+                        "i_est",
+                        "w_est",
+                      mode="plain")
+    @classmethod
+    def serialize_float(cls, value: float | tuple) -> str:
+        if value is not None:
+            if isinstance(value, tuple):
+                values = [f"{v:.2f}" for v in value]
+                return "(" + ", ".join(values) + ")"
+            else:
+                return f"{value:.2f}"
+
+
+"""
+////////////////////////////////////////////////////////////////////////////////////////
+// BEHAVIORAL
+////////////////////////////////////////////////////////////////////////////////////////
+"""
+
 
 @TableRegistry.register(alias="burrow-session")
 class BurrowSession(Table):
@@ -295,7 +382,7 @@ class BurrowSession(Table):
 
     @computed_field(return_type=bool, alias="Delivered UCS")
     def delivered_ucs(self) -> bool:
-        return True if self.condition == "Training" else False
+        return self.condition == "Training"
 
 
 @TableRegistry.register(alias="burrow-parameters")
@@ -325,20 +412,6 @@ class BurrowParameters(Table):
     iti_duration: str = Field("90 s", alias="ITI Duration")
 
 
-@TableRegistry.register(alias="multiplane-slm")
-class MultiplaneSLM(Table):
-    title: str = Field("Multiplane SLM", frozen=True)
-    subject: str = "E000"
-    idx: int = Field(default=0, alias="Plane #")
-    pattern: int = Field(default=0, alias="Pattern #")
-    x: float = 0.0
-    y: float = 0.0
-    z: float = 0.0
-    i_targ: float = Field(default=1.0, alias="Target Intensity")
-    i_est: float = Field(default=1.0, alias="Estimated Intensity")
-    w_est: float = Field(default=1.0, alias="Weight Estimate")
-
-
 """
 ////////////////////////////////////////////////////////////////////////////////////////
 // Interactive Filling of Records Tables
@@ -358,8 +431,9 @@ def find_optimal_grid(num_fields: int) -> tuple[int, int]:
     return rows, cols
 
 
-def initialize_fields(fields: dict, app: tk.Tk, rows: int, columns: int):
-
+def initialize_fields(
+    fields: dict, app: tk.Tk, rows: int, columns: int
+) -> tuple[tk.Tk, dict]:
     frames = {}
     entries = {}
     for name, value in fields.items():
