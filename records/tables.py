@@ -17,10 +17,10 @@ from pydantic import (
 )
 from pydantic_core import PydanticUndefined
 
-from sub_code.imaging.meta import load_metadata
+from darik_code.imaging.meta import load_metadata
 
 if TYPE_CHECKING:
-    from sub_code.records.templates import RecordsTemplate
+    from darik_code.records.templates import RecordsTemplate
 
 
 """
@@ -335,6 +335,7 @@ class ImagingRoadmap(Table):
             else:
                 return f"{value:.2f}"
 
+
 @TableRegistry.register(alias="multiplane-slm")
 class MultiplaneSLM(Table):
     title: str = Field("Multiplane SLM", frozen=True)
@@ -410,6 +411,42 @@ class BurrowParameters(Table):
     trace_duration: str = "10 s"
     response_duration: str = "10 s"
     iti_duration: str = Field("90 s", alias="ITI Duration")
+
+
+@TableRegistry.register(alias="startle-session")
+class StartleSession(Table):
+    title: str = Field("Burrow Session", frozen=True)
+    subject: str = "E000"
+    date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    time: str = Field(default_factory=lambda: datetime.now().strftime("%H:%M"))
+
+
+@TableRegistry.register(alias="startle-parameters")
+class StartleParameters(Table):
+    title: str = Field("Startle Parameters", frozen=True)
+    subject: str = "E000"
+    habituation_duration: str = "10 min"
+    iti_duration: str = Field(default="15 s", alias="ITI Duration")
+    stimulus_trial_duration: str = "1 sec"
+    stimulus_delivery_duration: str = "40 ms"
+    stimulus_style: str = "White Noise"
+    trials_per_stimulus: int = 5
+    baseline_intensity: str = "60 dB"
+    threshold_intensities: tuple[str, ...] = ("70 dB", "80 dB", "90 dB", "100 dB", "110 dB")
+
+
+@TableRegistry.register(alias="ppi-session")
+class PPISession(Table):
+    title: str = Field("PPI Session", frozen=True)
+    subject: str = "E000"
+    date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    time: str = Field(default_factory=lambda: datetime.now().strftime("%H:%M"))
+
+
+@TableRegistry.register(alias="ppi-parameters")
+class PPIParameters(Table):
+    title: str = Field("PPI Parameters", frozen=True)
+    subject: str = "E000"
 
 
 """
