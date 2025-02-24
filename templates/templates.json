@@ -84,5 +84,55 @@
             "multiplane-slm",
             "imaging-roadmap"
         ]
+    },
+    "startle": {
+        "key": "startle",
+        "documents": [
+            "Processing (PDF)"
+        ],
+        "images": null,
+        "files": [
+            "Processing (Notebook)"
+        ],
+        "tables": [
+            "startle-session",
+            "startle-parameters"
+        ],
+        "special": null
+    },
+    "ppi": {
+        "key": "ppi",
+        "documents": [
+            "Processing (PDF)"
+        ],
+        "images": null,
+        "files": [
+            "Processing (Notebook)"
+        ],
+        "tables": [
+            "ppi-session",
+            "ppi-parameters"
+        ],
+        "special": null
+    },
+    "etl-imaging": {
+        "key": "etl-imaging",
+        "documents": [
+            "imaging expression (PDF/s)"
+        ],
+        "images": [
+            "Mean Projections",
+            "Landmark Projections"
+        ],
+        "files": [
+            "imaging expression (Notebook/s)"
+        ],
+        "tables": [
+            "microscope-session"
+        ],
+        "special": [
+            "imaging-fov",
+            "imaging-roadmap"
+        ]
     }
 }

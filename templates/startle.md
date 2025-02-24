@@ -10,5 +10,13 @@
 {{ tables[1] | render_table(environment) }}
 {% endfilter %}
 
+#### Processing
+
+##### PDF
+{{ documents[0] | render_links(6) }}
+
+##### Notebook
+{{ files[0] | render_links(6) }}
+
 #### Notes
 None
