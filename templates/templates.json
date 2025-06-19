@@ -1,5 +1,5 @@
 {
-    "mouse-information":{
+    "mouse-information": {
         "key": "mouse-information",
         "documents": [
             "Registration (PDF)"
@@ -10,7 +10,7 @@
         ],
         "tables": [
             "mouse-information"
-            ],
+        ],
         "special": null
     },
     "head-fixation": {
@@ -24,7 +24,7 @@
             "head-fixation"
         ],
         "special": null
-},
+    },
     "cranial-window": {
         "key": "cranial-window",
         "documents": [
@@ -40,8 +40,8 @@
             "cranial-window"
         ],
         "special": null
-},
-    "tamoxifen-injection":{
+    },
+    "tamoxifen-injection": {
         "key": "tamoxifen-injection",
         "documents": null,
         "images": null,
@@ -52,7 +52,7 @@
             "tamoxifen-injection"
         ],
         "special": null
-},
+    },
     "burrow": {
         "key": "burrow",
         "documents": null,
@@ -63,7 +63,7 @@
             "burrow-parameters"
         ],
         "special": null
-},
+    },
     "slm-imaging": {
         "key": "slm-imaging",
         "documents": [
@@ -83,6 +83,26 @@
             "imaging-fov",
             "multiplane-slm",
             "imaging-roadmap"
+        ]
+    },
+    "slm-prescreen": {
+        "key": "slm-prescreen",
+        "documents": [
+            "prescreen (PDF/s)"
+        ],
+        "images": [
+            "Mean Projections",
+            "Landmark Projections"
+        ],
+        "files": [
+            "prescreen (Notebook/s)"
+        ],
+        "tables": [
+            "microscope-session",
+            "photostimulation-parameters"
+        ],
+        "special": [
+            "multiplane-slm"
         ]
     },
     "startle": {
@@ -134,5 +154,17 @@
             "imaging-fov",
             "imaging-roadmap"
         ]
+    },
+    "processing": {
+        "key": "processing",
+        "documents": [
+            "Pipeline (PDF/s)"
+        ],
+        "images": null,
+        "files": [
+            "Pipeline (Notebook/s)"
+        ],
+        "tables": null,
+        "special": null
     }
 }
