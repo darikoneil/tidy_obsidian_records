@@ -4,6 +4,7 @@ Generates tidy records that are rendered prettily in obsidian. Requires Python >
 ## Usage
 
 Note: Various templates require code from the code dump (e.g., ``slm-imaging`` requires the metadata loading functions from ``code_dump.imaging.slm``)
+  
 Note: For records that relate to PrairieView or the SLM control gui, a pop-up will appear to select the experiment's meta-files. These will be parsed and used to automatically fill the tables.
 
 ### Command Line
