@@ -2,11 +2,11 @@ from itertools import chain
 from pathlib import Path
 from shutil import copy2
 from tkinter import Tk
-from tkinter.filedialog import askopenfilenames
+from tkinter.filedialog import askdirectory, askopenfilenames
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from sub_code.records.templates import RecordsTemplate
+    from darik_code.records.templates import RecordsTemplate
 
 
 #: Default initial directory for file selection
@@ -18,13 +18,13 @@ Placeholders: TypeAlias = list[str | None]
 
 def select_file(**kwargs) -> Path | list[Path] | None:
     """
-    Interactive tool for file/files selection. All keyword arguments are
-    passed to
-    `tkinter.filedialog.askopenfilename <https://docs.python.org/3/library/tk.html>`_
+    Interactive tool for file/files selection.
 
-    :param kwargs: keyword arguments passed to tkinter.filedialog.askdirectory
+    All keyword arguments are passed to
+    `tkinter.filedialog.askopenfilename <https://docs.python.org/3/library/tk.html>`_.
 
-    :return: absolute path to file, list of absolute paths to files, or None
+    :param kwargs: Keyword arguments passed to tkinter.filedialog.askopenfilename.
+    :returns: Absolute path to file, list of absolute paths to files, or None.
     """
     global _INITIAL_DIRECTORY
 
@@ -45,7 +45,37 @@ def select_file(**kwargs) -> Path | list[Path] | None:
     return file
 
 
+def select_directory(**kwargs) -> Path | None:
+    """
+    Interactive tool for directory selection.
+
+    All keyword arguments are passed to
+    `tkinter.filedialog.askdirectory <https://docs.python.org/3/library/tk.html>`_.
+
+    :param kwargs: Keyword arguments passed to tkinter.filedialog.askdirectory.
+    :returns: Absolute path to directory or None.
+    """
+    global _INITIAL_DIRECTORY
+
+    root = Tk()
+    directory = askdirectory(initialdir=_INITIAL_DIRECTORY, **kwargs)
+    if str(directory) == "." or len(directory) == 0:
+        directory = None
+    else:
+        # noinspection PyTypeChecker
+        directory = Path(directory[0]).resolve()
+        _INITIAL_DIRECTORY = directory
+    root.destroy()
+    return directory
+
+
 def _copy_files(files: Path | list[Path], exported_file_directory: Path) -> None:
+    """
+    Copy files or a list of files to the exported file directory.
+
+    :param files: File or list of files to copy.
+    :param exported_file_directory: Directory to copy files into.
+    """
     if isinstance(files, Path):
         copy2(files, exported_file_directory.joinpath(files.name))
     elif isinstance(files, list):
@@ -57,12 +87,12 @@ def collect_files(
     subject: str, records_template: "RecordsTemplate", exports_directory: Path
 ) -> tuple[list[Path | None], list[Path | None], list[Path | None]]:
     """
-    Collect files for the subject using the provided records template
+    Collect files for the subject using the provided records template.
 
-    :param subject:
-    :param records_template:
-    :param exports_directory:
-    :return: The list of files of relevant documents, images, and files
+    :param subject: The subject name.
+    :param records_template: The records template.
+    :param exports_directory: The directory to export files to.
+    :returns: The list of files of relevant documents, images, and files.
     """
     exported_file_directory = exports_directory.joinpath(subject, "files")
     exported_file_directory.mkdir(exist_ok=True, parents=True)

@@ -2,9 +2,9 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from sub_code.records.misc import collect_files
-from sub_code.records.tables import collect_special, collect_tables, fill_tables
-from sub_code.records.templates import RecordsTemplateRegistry, render
+from darik_code.records.misc import collect_files
+from darik_code.records.tables import collect_special, collect_tables, fill_tables
+from darik_code.records.templates import RecordsTemplateRegistry, render
 
 #: Default templates directory
 DEFAULT_TEMPLATES_DIRECTORY: Path = Path(__file__).parents[2].joinpath("templates")
@@ -21,16 +21,16 @@ def generate_records(
     exports_directory: Path,
 ) -> None:
     """
-    Generate records for a subject using a template from the template directory. The
-    generated records will be saved in the exports directory within a folder named after
+    Generate records for a subject using a template from the template directory.
+
+    The generated records will be saved in the exports directory within a folder named after
     the subject. Any relevant documents, images, and files will be collected and
     copied to a sub-folder named 'files' within the subject folder.
 
-    :param key:
-    :param subject:
-    :param templates_directory:
-    :param exports_directory:
-    :return:
+    :param key: The key of the template to use.
+    :param subject: The name of the subject.
+    :param templates_directory: Path to the templates directory.
+    :param exports_directory: Path to save the generated records.
     """
     with RecordsTemplateRegistry() as registry:
         records_template = registry.get(key)
@@ -58,13 +58,13 @@ def generate_records(
 
 def arg_parser() -> dict[str, Any]:
     """
-    Parse command line arguments
+    Parse command line arguments.
 
-    :returns: The key of the template, the name of the subject, and the path to save the
-        generated records
+    :returns: Dictionary containing the key of the template, the name of the subject,
+        and the paths to the templates and exports directories.
     """
     parser = argparse.ArgumentParser(
-        description="Generate records for a subject using " "stored templates"
+        description="Generate records for a subject using stored templates"
     )
     parser.add_argument("key", help="The key of the template to use")
     parser.add_argument("subject", help="The name of the subject")

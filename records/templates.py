@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 
-from sub_code.records.extensions import add_extensions
-from sub_code.records.filters import add_filters
-from sub_code.records.misc import Placeholders
+from darik_code.records.extensions import add_extensions
+from darik_code.records.filters import add_filters
+from darik_code.records.misc import Placeholders
 
 if TYPE_CHECKING:
-    from sub_code.records.tables import Table
+    from darik_code.records.tables import Table
 
 """
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,10 @@ if TYPE_CHECKING:
 
 class RecordsTemplate(BaseModel):
     """
-    Template dataclass for storing template information
+    Template dataclass for storing template information.
+
+    Stores the key, documents, files, images, special placeholders, and tables
+    associated with a records template.
     """
 
     #: Template name
@@ -41,12 +44,9 @@ class RecordsTemplate(BaseModel):
 
 class RecordsTemplateRegistry:
     """
-    Registry of templates for generating records in Markdown format to paste into
-    Obsidian
+    Registry of templates for generating records in Markdown format to paste into Obsidian.
 
-    :cvar __registry: Registry of templates
-    :cvar __path: Path to the file containing the registry
-    :cvar __new_template: Whether a new template has been added to the registry
+    Handles loading, saving, and registering templates from/to a JSON file.
     """
 
     #: dict: Registry of templates
@@ -59,7 +59,7 @@ class RecordsTemplateRegistry:
     @classmethod
     def _save(cls) -> None:
         """
-        Save the registry to a file
+        Save the registry to a file.
         """
         with open(cls.__path, "r+") as file:
             file.write("{\n")
@@ -77,7 +77,7 @@ class RecordsTemplateRegistry:
     @classmethod
     def _load(cls) -> None:
         """
-        Load the registry from a file
+        Load the registry from a file.
         """
         with open(cls.__path, "r+") as file:
             cls.__registry = {
@@ -88,26 +88,32 @@ class RecordsTemplateRegistry:
     @classmethod
     def has(cls, key: str) -> bool:
         """
-        Check if the registry contains a template with the given key
+        Check if the registry contains a template with the given key.
 
-        :param key: The key of the template
-        :returns: True if the registry contains a template with the given key,
-         False otherwise
+        :param key: The key of the template.
+        :returns: True if the registry contains a template with the given key, False otherwise.
         """
         return key in cls.__registry
 
     @classmethod
     def get(cls, key: str) -> "RecordsTemplate":
         """
-        Get the template with the given key
+        Get the template with the given key.
 
-        :param key: The key of the template
-        :returns: Instantiated template
+        :param key: The key of the template.
+        :returns: Instantiated template.
         """
         return cls.__registry[key]
 
     @classmethod
     def register(cls, template_: "RecordsTemplate") -> None:
+        """
+        Register a new template in the registry.
+
+        :param template_: The RecordsTemplate instance to register.
+        :raises ValueError: If a template with the same key already exists.
+        :raises FileNotFoundError: If the corresponding Markdown file does not exist.
+        """
         if cls.has(template_.key):
             raise ValueError(f"Template with key {template_.key} already exists")
         try:
@@ -126,11 +132,17 @@ class RecordsTemplateRegistry:
 
     @classmethod
     def __enter__(cls) -> "RecordsTemplateRegistry":
+        """
+        Context manager entry: loads the registry from file.
+        """
         cls._load()
         return cls()
 
     @classmethod
     def __exit__(cls, exc_type, exc_val, exc_tb):  # noqa: ANN206, ANN001
+        """
+        Context manager exit: saves the registry if a new template was added.
+        """
         if cls.__new_template:
             cls._save()
 
@@ -143,7 +155,16 @@ def add_template(
     tables: Placeholders | None = None,
     special: Placeholders | None = None,
 ) -> None:
+    """
+    Add a new template to the registry.
 
+    :param key: The key for the template.
+    :param documents: List of document placeholders.
+    :param files: List of file placeholders.
+    :param images: List of image placeholders.
+    :param tables: List of table placeholders.
+    :param special: List of special placeholders.
+    """
     with RecordsTemplateRegistry() as registry:
         template = RecordsTemplate(
             key=key,
@@ -172,6 +193,18 @@ def render(
     tables: list["Table"] | list[None],
     special: list["Table"] | list[None],
 ) -> str:
+    """
+    Render the records template using Jinja2.
+
+    :param templates_directory: Path to the templates directory.
+    :param key: The key of the template to render.
+    :param documents: List of document paths.
+    :param images: List of image paths.
+    :param files: List of file paths.
+    :param tables: List of table data.
+    :param special: List of special table data.
+    :returns: Rendered template as a string.
+    """
     environment = Environment(
         loader=FileSystemLoader(str(templates_directory)),
         trim_blocks=True,

@@ -1,19 +1,20 @@
 import math
 import tkinter as tk
+from collections.abc import KeysView
 from datetime import datetime
 from itertools import product
 from pathlib import Path
 from tkinter import ttk
-from typing import TYPE_CHECKING, Any, KeysView, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
     computed_field,
+    field_serializer,
     field_validator,
     model_validator,
-    field_serializer
 )
 from pydantic_core import PydanticUndefined
 
@@ -32,10 +33,10 @@ if TYPE_CHECKING:
 
 def _gen_field_alias(field_name: str) -> str:
     """
-    Convert a snake_case field name to a plain English alias
+    Convert a snake_case field name to a plain English alias.
 
-    :param field_name: The snake_case field name
-    :return: The plain English alias
+    :param field_name: The snake_case field name.
+    :returns: The plain English alias.
     """
     parts = field_name.split("_")
     return " ".join([part.capitalize() for part in parts])
@@ -43,11 +44,15 @@ def _gen_field_alias(field_name: str) -> str:
 
 class Table(BaseModel):
     """
-    Base class for all records tables
+    Base class for all records tables.
+
+    Provides a title and configuration for alias generation.
     """
 
     title: str
-    model_config = ConfigDict(alias_generator=_gen_field_alias, populate_by_name=True)
+    model_config = ConfigDict(
+        alias_generator=_gen_field_alias, populate_by_name=True, extra="ignore"
+    )
 
     def __str__(self):
         return self.title
@@ -55,22 +60,24 @@ class Table(BaseModel):
 
 class TableRegistry:
     """
-    A registry for all records tables. This class allows us to dynamically retrieve
-    a table by its name or alias
+    A registry for all records tables.
+
+    Allows dynamic retrieval and registration of tables by name or alias.
     """
 
     #: A dictionary to store all records tables
     __registry: dict = {}
 
     @classmethod
-    def register(cls, alias: str | None = None):  # noqa: ANN001, ANN201, ANN206
+    def register(cls, alias: str | None = None):  # noqa: ANN206
         """
-        A decorator to register a new records table
+        Decorator to register a new records table.
 
-        :param alias: An alias for the table used as an additional key for retrieval
+        :param alias: An alias for the table used as an additional key for retrieval.
+        :returns: The decorator for table registration.
         """
 
-        def register_table(table):  # noqa: ANN001, ANN201, ANN206
+        def register_table(table):  # noqa: ANN001
             cls.__registry[alias or table.__name__] = table
             return table
 
@@ -79,30 +86,29 @@ class TableRegistry:
     @classmethod
     def get(cls, key: str) -> Table:
         """
-        Retrieve a table by its name or alias
+        Retrieve a table by its name or alias.
 
-        :param key: The name or alias of the table
-        :return: The table class
+        :param key: The name or alias of the table.
+        :returns: The table class.
         """
         return cls.__registry.get(key)
 
     @classmethod
     def tables(cls) -> KeysView:
         """
-        Retrieve all keys for the registered tables
+        Retrieve all keys for the registered tables.
 
-        :return: The names and aliases of all registered tables
+        :returns: The names and aliases of all registered tables.
         """
         return cls.__registry.keys()
 
 
 def collect_tables(records_template: "RecordsTemplate") -> list[Table | None]:
     """
-    Collect all table implementations used in the records template from the
-    table registry
+    Collect all table implementations used in the records template from the table registry.
 
-    :param records_template: The records template
-    :return: A list of records tables (or an empty list)
+    :param records_template: The records template.
+    :returns: A list of records tables (or an empty list).
     """
     return [TableRegistry.get(table) for table in records_template.tables or []]
 
@@ -115,6 +121,12 @@ def collect_tables(records_template: "RecordsTemplate") -> list[Table | None]:
 
 
 def collect_special(records_template: "RecordsTemplate") -> list[Any | None]:
+    """
+    Collect all special table implementations used in the records template from the table registry.
+
+    :param records_template: The records template.
+    :returns: A list of special records tables (or an empty list).
+    """
     return [TableRegistry.get(special) for special in records_template.special or []]
 
 
@@ -150,8 +162,7 @@ class MouseInformation(Table):
                 value = f"0{value}"
         if all(char.isdigit() for char in value):
             return value
-        else:
-            raise ValueError("Cage number must be a 6-digit integer")
+        raise ValueError("Cage number must be a 6-digit integer")
 
 
 """
@@ -232,7 +243,7 @@ class ImagingFOV(Table):
     metadata_file: Path | str | None = ""
     objective_lens: str | None = ""
     laser_power: float | None = 0.0
-    pmt_gain: int | float| None = 0
+    pmt_gain: int | float | None = 0
     preamp_filter: str | None = "None"
     optical_zoom: float | None = 1.0
     lines_per_frame: int | None = 0
@@ -253,7 +264,7 @@ class ImagingFOV(Table):
         imaging_meta = meta.imaging_meta
         imaging_fov.objective_lens = imaging_meta.objective_lens
         imaging_fov.laser_power = imaging_meta.laser_power.imaging
-        imaging_fov.pmt_gain = imaging_meta.pmt_gain.pmt_2_green
+        imaging_fov.pmt_gain = imaging_meta.pmt_gain[0]
         imaging_fov.preamp_filter = imaging_meta.preamp_filter
         imaging_fov.optical_zoom = imaging_meta.optical_zoom
         imaging_fov.lines_per_frame = imaging_meta.lines_per_frame
@@ -262,31 +273,32 @@ class ImagingFOV(Table):
         imaging_fov.frame_rate = 1 / imaging_meta.frame_period
         imaging_fov.x = imaging_meta.position_current.x_axis
         imaging_fov.y = imaging_meta.position_current.y_axis
-        imaging_fov.z = imaging_meta.position_current.z_axis_z_focus
+        imaging_fov.z = imaging_meta.position_current[2]
         imaging_fov.planes = meta.sequence_meta.num_planes
         imaging_fov.channels = meta.sequence_meta.num_channels
         fr = (imaging_fov.frame_rate - 4.0 * imaging_fov.planes) / imaging_fov.planes
         imaging_fov.effective_frame_rate = fr
         return imaging_fov
 
-    @field_serializer("laser_power",
-                        "microns_per_pixel",
-                        "pmt_gain",
-                        "optical_zoom",
-                        "frame_rate",
-                        "effective_frame_rate",
-                        "x",
-                        "y",
-                        "z",
-                        mode="plain")
+    @field_serializer(
+        "laser_power",
+        "microns_per_pixel",
+        "pmt_gain",
+        "optical_zoom",
+        "frame_rate",
+        "effective_frame_rate",
+        "x",
+        "y",
+        "z",
+        mode="plain",
+    )
     @classmethod
     def serialize_float(cls, value: float | tuple) -> str:
         if value is not None:
             if isinstance(value, tuple):
                 values = [f"{v:.2f}" for v in value]
                 return "(" + ", ".join(values) + ")"
-            else:
-                return f"{value:.2f}"
+            return f"{value:.2f}"
 
 
 @TableRegistry.register(alias="imaging-roadmap")
@@ -322,18 +334,19 @@ class ImagingRoadmap(Table):
         )
         return imaging_roadmap
 
-    @field_serializer("relative_x_position",
-                        "relative_y_position",
-                        "relative_z_position",
-                        mode="plain")
+    @field_serializer(
+        "relative_x_position",
+        "relative_y_position",
+        "relative_z_position",
+        mode="plain",
+    )
     @classmethod
     def serialize_float(cls, value: float | tuple) -> str:
         if value is not None:
             if isinstance(value, tuple):
                 values = [f"{v:.2f}" for v in value]
                 return "(" + ", ".join(values) + ")"
-            else:
-                return f"{value:.2f}"
+            return f"{value:.2f}"
 
 
 @TableRegistry.register(alias="multiplane-slm")
@@ -348,21 +361,25 @@ class MultiplaneSLM(Table):
     i_est: float = Field(default=1.0, alias="Estimated Intensity")
     w_est: float = Field(default=1.0, alias="Weight Estimate")
 
-    @field_serializer("x",
-                      "y",
-                        "z",
-                      "i_targ",
-                        "i_est",
-                        "w_est",
-                      mode="plain")
+    @field_serializer("x", "y", "z", "i_targ", "i_est", "w_est", mode="plain")
     @classmethod
     def serialize_float(cls, value: float | tuple) -> str:
         if value is not None:
             if isinstance(value, tuple):
                 values = [f"{v:.2f}" for v in value]
                 return "(" + ", ".join(values) + ")"
-            else:
-                return f"{value:.2f}"
+            return f"{value:.2f}"
+
+
+@TableRegistry.register(alias="photostimulation")
+class Photostimulation(Table):
+    title: str = Field("Photostimulation", frozen=True)
+    wavelength: float = Field(default=1064, alias="Wavelength (nm)")
+    power: float = Field(default=0.0, alias="Power (a.u.)")
+    duration: float = Field(default=30.0, alias="Duration (ms)")
+    reps: int = 3
+    interval: float = Field(default=30.0, alias="Interval (ms)")
+    spiral_diameter: float = Field(default=8.0, alias="Spiral Diameter (um)")
 
 
 """
@@ -430,9 +447,9 @@ class StartleParameters(Table):
     stimulus_trial_duration: str = "1 sec"
     stimulus_delivery_duration: str = "40 ms"
     stimulus_style: str = "White Noise"
-    trials_per_stimulus: int = 5
+    trials_per_intensity: int = 5
     baseline_intensity: str = "60 dB"
-    threshold_intensities: tuple[str, ...] = ("70 dB", "80 dB", "90 dB", "100 dB", "110 dB")
+    threshold_intensities: str = "70, 80, 90, 100, & 110 dB"
 
 
 @TableRegistry.register(alias="ppi-session")
@@ -447,6 +464,16 @@ class PPISession(Table):
 class PPIParameters(Table):
     title: str = Field("PPI Parameters", frozen=True)
     subject: str = "E000"
+    habituation_duration: str = "1 min"
+    pre_pulse_duration: str = "20 ms"
+    gap_duration: str = "100 ms"
+    post_pulse_duration: str = "40 ms"
+    ppi_trial_duration: str = "1 s"
+    iti_duration: str = Field(default="15 s", alias="ITI Duration")
+    stimulus_style: str = "White Noise"
+    trials_per_intensity: int = 5
+    baseline_intensity: str = "60 dB"
+    threshold_intensities: str = "70, 80, & 90 dB"
 
 
 """
@@ -460,8 +487,8 @@ def find_optimal_grid(num_fields: int) -> tuple[int, int]:
     """
     Find the optimal number of rows and columns for a given number of fields.
 
-    :param num_fields: Number of total fields to display
-    :returns: The number of rows and columns for the grid
+    :param num_fields: Number of total fields to display.
+    :returns: The number of rows and columns for the grid.
     """
     cols = math.ceil(num_fields / 16)
     rows = 16
@@ -471,6 +498,15 @@ def find_optimal_grid(num_fields: int) -> tuple[int, int]:
 def initialize_fields(
     fields: dict, app: tk.Tk, rows: int, columns: int
 ) -> tuple[tk.Tk, dict]:
+    """
+    Initialize the GUI fields for interactive table filling.
+
+    :param fields: Dictionary of field names and default values.
+    :param app: The Tkinter root application.
+    :param rows: Number of rows in the grid.
+    :param columns: Number of columns in the grid.
+    :returns: The Tkinter app and a dictionary of entry widgets.
+    """
     frames = {}
     entries = {}
     for name, value in fields.items():
@@ -493,6 +529,13 @@ def initialize_fields(
 
 
 def submit_entries(app: tk.Tk, entries: dict, fields: dict) -> None:
+    """
+    Submit the entries from the GUI and update the fields dictionary.
+
+    :param app: The Tkinter root application.
+    :param entries: Dictionary of entry widgets.
+    :param fields: Dictionary to update with user input.
+    """
     fields_iter = iter(entries.items())
     for _, row in entries.items():
         if row:
@@ -505,11 +548,17 @@ def submit_entries(app: tk.Tk, entries: dict, fields: dict) -> None:
 
 
 def make_fields_container(table: BaseModel) -> dict:
+    """
+    Create a dictionary of fields for a given table, populating with default values.
+
+    :param table: The table model.
+    :returns: Dictionary of field names and default values.
+    """
     fields = dict(table.model_fields)
     for key, value in fields.items():
         if key == "title":
             continue
-        elif callable(value.default_factory):
+        if callable(value.default_factory):
             fields[key] = value.default_factory()
         elif value.default == PydanticUndefined:
             fields[key] = "N/A"
@@ -521,11 +570,11 @@ def make_fields_container(table: BaseModel) -> dict:
 # noinspection PyUnusedLocal
 def fill_tables(subject: str, tables: list[BaseModel | None]) -> list[dict | None]:
     """
-    Fill all records tables with interactive GUI
+    Fill all records tables with interactive GUI.
 
-    :param subject: The name of the subject
-    :param tables: The list of records tables
-    :return: A list of dictionaries containing the filled records tables
+    :param subject: The name of the subject.
+    :param tables: The list of records tables.
+    :returns: A list of dictionaries containing the filled records tables.
     """
     filled_tables = []
     for table in tables:
